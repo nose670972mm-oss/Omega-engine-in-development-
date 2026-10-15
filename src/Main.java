@@ -1,46 +1,56 @@
 import com.omega.core.Node;
+import com.omega.graphics.EditorWindow;
+import com.omega.graphics.LauncherDialog;
 import com.omega.scripts.RotateComponent;
 
-/**
- * Punto de entrada principal para Omega Engine (Fase de Pruebas de Arquitectura).
- */
+import javax.swing.*;
+
 public class Main {
     public static void main(String[] args) {
-        System.out.println("==========================================");
-        System.out.println("   OMEGA ENGINE - ARCHITECTURE VERIFICATION");
-        System.out.println("   Developer: Isaías | Language: Java");
-        System.out.println("==========================================\n");
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ignored) {}
 
-        // 1. Crear Jerarquía de Escena (Árbol de Nodos)
-        Node root = new Node("SceneRoot");
-        Node player = new Node("PlayerNode");
-        Node weapon = new Node("WeaponNode");
+        // 1. Launcher inicial de Proyecto
+        LauncherDialog launcher = new LauncherDialog(null);
+        launcher.setVisible(true);
 
-        // 2. Conectar Jerarquía (Godot Style)
-        root.addChild(player);
-        player.addChild(weapon);
-
-        // 3. Inyectar Componentes de Lógica (Unity Style)
-        RotateComponent rotateBehavior = new RotateComponent(90.0); // 90 grados/seg
-        player.addComponent(rotateBehavior);
-
-        System.out.println("\n[Escena] Estructura creada con éxito:");
-        System.out.println(" - " + root.getName());
-        System.out.println("   └── " + player.getName());
-        System.out.println("       └── " + weapon.getName() + "\n");
-
-        // 4. Simulación del Bucle Principal (Game Loop Simulado)
-        double simulatedDeltaTime = 0.016667; // ~60 FPS (16.6 ms por frame)
-        System.out.println("[Game Loop] Ejecutando simulación de 5 frames:");
-
-        for (int frame = 1; frame <= 5; frame++) {
-            root.update(simulatedDeltaTime);
-            root.render();
-
-            System.out.printf(" Frame %d | Rotación acumulada en '%s': %.2f°%n",
-                    frame, player.getName(), rotateBehavior.getCurrentRotation());
+        if (!launcher.isConfirmed()) {
+            System.out.println("[Omega Engine] Inicialización cancelada por el usuario.");
+            System.exit(0);
         }
 
-        System.out.println("\n[Omega Engine] Simulación completada exitosamente.");
+        String projectName = launcher.getProjectName();
+        System.out.println("[Omega Engine] Proyecto cargado: " + projectName);
+
+        // 2. Escena inicial
+        Node root = new Node("SceneRoot");
+        
+        Node player = new Node("PlayerNode");
+        player.transform.x = -80.0;
+        player.transform.y = -40.0;
+
+        Node sprite = new Node("Sprite2D");
+        sprite.transform.x = 160.0;
+        sprite.transform.y = 80.0;
+
+        root.addChild(player);
+        root.addChild(sprite);
+
+        // Inyección de componente de prueba
+        RotateComponent rotateComp = new RotateComponent(45.0);
+        player.addComponent(rotateComp);
+
+        // 3. Ventana del Editor
+        SwingUtilities.invokeLater(() -> {
+            EditorWindow editor = new EditorWindow(projectName, root);
+            editor.setVisible(true);
+
+            Timer loopTimer = new Timer(16, e -> {
+                root.update(0.016);
+                editor.refreshViewport();
+            });
+            loopTimer.start();
+        });
     }
 }

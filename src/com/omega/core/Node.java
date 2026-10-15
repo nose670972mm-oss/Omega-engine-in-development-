@@ -5,23 +5,24 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Nodo base para construir la jerarquía del árbol de la escena.
- * Combina la jerarquía Padre-Hijo de Godot con el patrón Entidad-Componente de Unity.
+ * Nodo base para la jerarquía del árbol de escena de Omega Engine.
  */
 public class Node {
     private String name;
     private Node parent;
     private final List<Node> children;
     private final List<Component> components;
+    public Transform2D transform;
 
     public Node(String name) {
         this.name = name;
         this.parent = null;
         this.children = new ArrayList<>();
         this.components = new ArrayList<>();
+        this.transform = new Transform2D();
     }
 
-    // --- Gestión de Jerarquía (Godot Style) ---
+    // --- Gestión de Jerarquía ---
     public void addChild(Node child) {
         if (child.parent != null) {
             child.parent.removeChild(child);
@@ -40,7 +41,7 @@ public class Node {
         return Collections.unmodifiableList(children);
     }
 
-    // --- Gestión de Componentes (Unity Style) ---
+    // --- Gestión de Componentes ---
     public void addComponent(Component component) {
         component.setNode(this);
         this.components.add(component);
@@ -57,41 +58,32 @@ public class Node {
         return null;
     }
 
-    // --- Ciclo de Vida del Motor ---
+    // --- Ciclo de Vida ---
     public void update(double deltaTime) {
-        // 1. Actualizar componentes locales
         for (int i = 0; i < components.size(); i++) {
             components.get(i).update(deltaTime);
         }
-
-        // 2. Propagar actualización a nodos hijos
         for (int i = 0; i < children.size(); i++) {
             children.get(i).update(deltaTime);
         }
     }
 
     public void render() {
-        // 1. Renderizar componentes locales
         for (int i = 0; i < components.size(); i++) {
             components.get(i).render();
         }
-
-        // 2. Propagar renderizado a nodos hijos
         for (int i = 0; i < children.size(); i++) {
             children.get(i).render();
         }
     }
 
-    // --- Getters & Setters ---
-    public String getName() {
-        return name;
-    }
+    // --- Getters y Setters ---
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public Node getParent() { return parent; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Node getParent() {
-        return parent;
+    @Override
+    public String toString() {
+        return name; // Utilizado directamente por JTree en la interfaz gráfica
     }
 }
